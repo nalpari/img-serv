@@ -4,6 +4,8 @@ const multer = require("multer");
 const cors = require("cors");
 const fs = require("fs");
 const path = require("path");
+const bodyParser = require("body-parser");
+const { v4} = require('uuid');
 
 const app = express();
 const port = 4000;
@@ -15,7 +17,7 @@ const storage = multer.diskStorage({
   // 파일이 저장되는 위치를 설정 (file: 업로드된 파일의 정보, cb: 콜백 함수)
   destination: (req, file, cb) => {
     // 업로드 폴더 경로 지정
-    const uploadPath = "uploads/";
+    const uploadPath = "public/uploads/";
 
     // 폴더가 없으면 폴더를 생성
     if (!fs.existsSync(uploadPath)) {
@@ -31,9 +33,12 @@ const storage = multer.diskStorage({
     // 콜백 함수를 호출하여 변경된 파일 이름을 전달
     // file.fieldname: 폼 필드의 이름, Date.now(): 현재 시간 (밀리초), path.extname(file.originalname): 원본 파일의 확장자
     // 파일 이름 예: file-1633959266884.jpg
+    console.log('req :', req.params);
     cb(
       null,
-      file.fieldname + "-" + Date.now() + path.extname(file.originalname)
+      // req.params.currentCanvasPlanId +  path.extname(file.originalname)
+      v4() + path.extname(file.originalname)
+      // file.fieldname + "-" + Date.now() + path.extname(file.originalname)
     );
   },
 });
@@ -62,7 +67,9 @@ const upload = multer({
 app.use(express.static("public"));
 
 app.use(express.json());
-app.use(cors());
+app.use(bodyParser.json());	// json 등록
+app.use(bodyParser.urlencoded({ extended : false }));	// URL-encoded 등록
+app.use(cors());  // CORS 미들웨어 등록
 
 app.get("/", (req, res) => {
   res.send("Hello World");
@@ -71,10 +78,14 @@ app.get("/", (req, res) => {
 // '/upload' 라우트를 설정하고 multer 미들웨어를 사용
 // multer의 upload.single('file') 함수로 'file' 이라는 이름의 단일 파일 처리
 app.post("/image/upload", upload.single("file"), (req, res) => {
-  // console.log(`File uploaded: ${req.file.originalname}`);
-  console.log("file upload");
+  console.log(`File uploaded: ${req.file.originalname}`);
+  console.log('req body: ', req.body);
+  const result = {
+    filePath: `/uploads/${req.file.filename}`,
+  }
 
-  res.status(200).send("File uploaded successfully.");
+  res.status(200).send(result);
+  // res.status(200).send("File uploaded successfully.");
 });
 
 app.listen(port, () => {
