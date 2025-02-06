@@ -21,9 +21,9 @@ const storage = multer.diskStorage({
     const uploadPath = "public/uploads/";
 
     // 폴더가 없으면 폴더를 생성
-    if (!fs.existsSync(uploadPath)) {
-      fs.mkdirSync(uploadPath);
-    }
+    // if (!fs.existsSync(uploadPath)) {
+    //   fs.mkdirSync(uploadPath);
+    // }
 
     // 콜백 함수를 호출하여 업로드 경로를 전달
     cb(null, uploadPath);
