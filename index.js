@@ -2,10 +2,11 @@
 const express = require("express");
 const multer = require("multer");
 const cors = require("cors");
-const fs = require("fs");
+// const fs = require("fs");
 const path = require("path");
 const bodyParser = require("body-parser");
 const { v4} = require('uuid');
+const fs = require('fs').promises;
 
 const app = express();
 const port = 4000;
@@ -78,14 +79,58 @@ app.get("/", (req, res) => {
 // '/upload' 라우트를 설정하고 multer 미들웨어를 사용
 // multer의 upload.single('file') 함수로 'file' 이라는 이름의 단일 파일 처리
 app.post("/image/upload", upload.single("file"), (req, res) => {
-  console.log(`File uploaded: ${req.file.originalname}`);
-  console.log('req body: ', req.body);
+  // console.log(`File uploaded: ${req.file.originalname}`);
+  // console.log('req body: ', req.body);
   const result = {
     filePath: `/uploads/${req.file.filename}`,
   }
 
   res.status(200).send(result);
   // res.status(200).send("File uploaded successfully.");
+});
+
+app.post('/cad/convert', async (req, res) => {
+  const files = req.body.Files;
+
+  const FILE_PATH = 'public/cads'
+  try {
+    await fs.readdir(FILE_PATH)
+  } catch {
+    await fs.mkdir(FILE_PATH)
+  }
+  fs.writeFile(`${FILE_PATH}/${files[0].FileName}.png`, files[0].FileData, 'base64')
+
+  const result = {
+    filePath: `/cads/${files[0].FileName}.png`,
+  }
+
+  res.status(200).send(result);
+
+});
+
+app.get('/map/convert', async (req, res) => {
+  const { q, fileNm, zoom } = req.query;
+
+  const targetUrl = `https://maps.googleapis.com/maps/api/staticmap?center=${q}&zoom=${zoom}&maptype=satellite&size=640x640&scale=1&key=AIzaSyDO7nVR1N_D2tKy60hgGFavpLaXkHpiHpc`
+  const decodeUrl = decodeURIComponent(targetUrl)
+
+  const response = await fetch(decodeUrl)
+  const data = await response.arrayBuffer()
+  const buffer = Buffer.from(data)
+
+  const FILE_PATH = 'public/maps'
+  try {
+    await fs.readdir(FILE_PATH)
+  } catch {
+    await fs.mkdir(FILE_PATH)
+  }
+  fs.writeFile(`${FILE_PATH}/${fileNm}.png`, buffer)
+
+  const result = {
+    filePath: `/maps/${fileNm}.png`,
+  }
+
+  res.status(200).send(result);
 });
 
 app.listen(port, () => {
