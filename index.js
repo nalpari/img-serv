@@ -70,7 +70,10 @@ app.use(express.static("public"));
 app.use(express.json());
 app.use(bodyParser.json());	// json 등록
 app.use(bodyParser.urlencoded({ extended : false }));	// URL-encoded 등록
-app.use(cors());  // CORS 미들웨어 등록
+let corsOrigins = {
+  origin: ['http://localhost:3000', 'http://1.248.227.176:3000/']
+}
+app.use(cors(corsOrigins));  // CORS 미들웨어 등록
 
 app.get("/", (req, res) => {
   res.send("Hello World");
@@ -78,6 +81,9 @@ app.get("/", (req, res) => {
 
 // '/upload' 라우트를 설정하고 multer 미들웨어를 사용
 // multer의 upload.single('file') 함수로 'file' 이라는 이름의 단일 파일 처리
+/**
+ * 싱글파일 업로드시
+ */
 app.post("/image/upload", upload.single("file"), (req, res) => {
   // console.log(`File uploaded: ${req.file.originalname}`);
   // console.log('req body: ', req.body);
@@ -89,6 +95,9 @@ app.post("/image/upload", upload.single("file"), (req, res) => {
   // res.status(200).send("File uploaded successfully.");
 });
 
+/**
+ * cad 파일 업로드시
+ */
 app.post('/cad/convert', async (req, res) => {
   const files = req.body.Files;
 
@@ -108,6 +117,29 @@ app.post('/cad/convert', async (req, res) => {
 
 });
 
+/**
+ * canvas 이미지 저장
+ */
+app.post('/image/canvas', async(req, res) => {
+  const {objectNo, planNo, type, canvasToPng} = req.body
+  console.log('objectNo: ', objectNo);
+  console.log('planNo: ', planNo);
+  console.log('type: ', type);
+
+  const FILE_PATH = 'public/Drawing'
+  try {
+    await fs.readdir(FILE_PATH)
+  } catch {
+    await fs.mkdir(FILE_PATH)
+  }
+  fs.writeFile(`${FILE_PATH}/${objectNo}_${planNo}_${type}.png`, canvasToPng.toDataURL('image/png'), 'base64');
+
+  res.status(200).send('ok');
+});
+
+/**
+ * 구글 맵 이미지 저장
+ */
 app.get('/map/convert', async (req, res) => {
   const { q, fileNm, zoom } = req.query;
 
