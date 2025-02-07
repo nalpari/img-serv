@@ -70,10 +70,7 @@ app.use(express.static("public"));
 app.use(express.json());
 app.use(bodyParser.json());	// json 등록
 app.use(bodyParser.urlencoded({ extended : false }));	// URL-encoded 등록
-let corsOrigins = {
-  origin: ['http://localhost:3000', 'http://1.248.227.176:3000/']
-}
-app.use(cors(corsOrigins));  // CORS 미들웨어 등록
+app.use(cors());  // CORS 미들웨어 등록
 
 app.get("/", (req, res) => {
   res.send("Hello World");
