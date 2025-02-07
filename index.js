@@ -8,6 +8,8 @@ const bodyParser = require("body-parser");
 const { v4} = require('uuid');
 const fs = require('fs').promises;
 
+const { cropImage } = require('cropify');
+
 const app = express();
 const port = 4000;
 
@@ -118,10 +120,11 @@ app.post('/cad/convert', async (req, res) => {
  * canvas 이미지 저장
  */
 app.post('/image/canvas', async(req, res) => {
-  const {objectNo, planNo, type, canvasToPng} = req.body
+  const {objectNo, planNo, type, canvasToPng, coordinates} = req.body
   console.log('objectNo: ', objectNo);
   console.log('planNo: ', planNo);
   console.log('type: ', type);
+  console.log('coordinates: ', coordinates);
 
   const FILE_PATH = 'public/Drawing'
   try {
@@ -129,7 +132,29 @@ app.post('/image/canvas', async(req, res) => {
   } catch {
     await fs.mkdir(FILE_PATH)
   }
-  fs.writeFile(`${FILE_PATH}/${objectNo}_${planNo}_${type}.png`, canvasToPng.toDataURL('image/png'), 'base64');
+  // fs.writeFile(`${FILE_PATH}/${objectNo}_${planNo}_${type}.png`, canvasToPng, 'base64');
+  fs.writeFile(`${FILE_PATH}/${objectNo}_${planNo}_${type}_dummy.png`, canvasToPng, 'base64');
+
+  cropImage({
+    imagePath: `${FILE_PATH}/${objectNo}_${planNo}_${type}_dummy.png`,
+    x: coordinates[0].x,
+    y: coordinates[0].y,
+    width: coordinates[1].x - coordinates[0].x,
+    height: coordinates[1].y - coordinates[0].y,
+    borderRadius: 0,
+    cropCenter: true
+  }).then(x => {
+    fs.writeFile(`${FILE_PATH}/${objectNo}_${planNo}_${type}.png`, x);
+  })
+
+  // sharp(`${FILE_PATH}/${objectNo}_${planNo}_${type}_dummy.png`)
+  //   .extract(config)
+  //   .toFile(`${FILE_PATH}/${objectNo}_${planNo}_${type}.png`, (err, info) => {
+  //     console.log('err: ', err);
+  //     console.log('info: ', info);
+  //   });
+
+  fs.rm(`${FILE_PATH}/${objectNo}_${planNo}_${type}_dummy.png`)
 
   res.status(200).send('ok');
 });
