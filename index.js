@@ -202,20 +202,35 @@ app.post("/image/canvas", upload.single("file"), async (req, res) => {
   //   .catch((err) => {
   //     console.log("err: ", err);
   //   });
+  try {
+    const metadata = await sharp(imagePath).metadata();
+    console.log("🚀 ~ app.post ~ metadata:", metadata);
+
+    await sharp(imagePath)
+      .extract({
+        width: parseInt(width),
+        height: parseInt(height),
+        left: parseInt(left),
+        top: parseInt(top),
+      })
+      .toFile(`${FILE_PATH}/${objectNo}_${planNo}_${type}.png`);
+  } catch (err) {
+    console.log("err: ", err);
+  }
 
   // console.log("File exists, proceeding with image processing");
 
-  cropImage({
-    imagePath,
-    x: parseInt(left),
-    y: parseInt(top),
-    width: parseInt(width),
-    height: parseInt(height),
-    borderRadius: 0,
-    cropCenter: true,
-  }).then((x) => {
-    fs.writeFile(`${FILE_PATH}/${objectNo}_${planNo}_${type}.png`, x);
-  });
+  // cropImage({
+  //   imagePath,
+  //   x: parseInt(left),
+  //   y: parseInt(top),
+  //   width: parseInt(width),
+  //   height: parseInt(height),
+  //   borderRadius: 0,
+  //   cropCenter: true,
+  // }).then((x) => {
+  //   fs.writeFile(`${FILE_PATH}/${objectNo}_${planNo}_${type}.png`, x);
+  // });
 
   // sharp(`${FILE_PATH}/${objectNo}_${planNo}_${type}_dummy.png`)
   //   .extract(config)
