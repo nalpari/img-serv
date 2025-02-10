@@ -78,6 +78,18 @@ app.get("/", (req, res) => {
   res.send("Hello World");
 });
 
+const checkArea = (obj) => {
+  const { width, height, left, top } = obj;
+
+  if (left < 0 || top < 0 || width > 1600 || height > 1000) {
+    return false;
+  } else if (left + width > 1600 || top + height > 1000) {
+    return false;
+  }
+
+  return true;
+};
+
 // '/upload' 라우트를 설정하고 multer 미들웨어를 사용
 // multer의 upload.single('file') 함수로 'file' 이라는 이름의 단일 파일 처리
 /**
@@ -206,14 +218,21 @@ app.post("/image/canvas", upload.single("file"), async (req, res) => {
     const metadata = await sharp(imagePath).metadata();
     console.log("🚀 ~ app.post ~ metadata:", metadata);
 
-    await sharp(imagePath)
-      .extract({
-        width: parseInt(width),
-        height: parseInt(height),
-        left: parseInt(left),
-        top: parseInt(top),
-      })
-      .toFile(`${FILE_PATH}/${objectNo}_${planNo}_${type}.png`);
+    const checkResult = checkArea({ width, height, left, top });
+    if (!checkResult) {
+      await sharp(imagePath).toFile(
+        `${FILE_PATH}/${objectNo}_${planNo}_${type}.png`
+      );
+    } else {
+      await sharp(imagePath)
+        .extract({
+          width: parseInt(width),
+          height: parseInt(height),
+          left: parseInt(left),
+          top: parseInt(top),
+        })
+        .toFile(`${FILE_PATH}/${objectNo}_${planNo}_${type}.png`);
+    }
   } catch (err) {
     console.log("err: ", err);
   }
