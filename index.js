@@ -83,8 +83,6 @@ const checkArea = (obj) => {
 
   if (left < 0 || top < 0 || width > 1600 || height > 1000) {
     return false;
-  } else if (left + width > 1600 || top + height > 1000) {
-    return false;
   }
 
   return true;
