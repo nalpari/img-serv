@@ -1,8 +1,6 @@
-// 필요한 모듈을 불러옵니다.
 const express = require("express");
 const multer = require("multer");
 const cors = require("cors");
-// const fs = require("fs");
 const path = require("path");
 const bodyParser = require("body-parser");
 const { v4 } = require("uuid");
@@ -13,6 +11,10 @@ const sharp = require("sharp");
 
 const app = express();
 const port = 4000;
+
+/**
+ * 파일 업로드를 수행할 외부 서버
+ */
 
 // Multer 설정: 업로드된 파일을 'uploads/' 폴더에 저장
 // const upload = multer({ dest: 'uploads/' });
@@ -92,6 +94,7 @@ const checkArea = (obj) => {
 // multer의 upload.single('file') 함수로 'file' 이라는 이름의 단일 파일 처리
 /**
  * 싱글파일 업로드시
+ * 일반 이미지 파일 업로드시 uploads 폴더로 저장
  */
 app.post("/image/upload", upload.single("file"), async (req, res) => {
   try {
@@ -108,7 +111,6 @@ app.post("/image/upload", upload.single("file"), async (req, res) => {
 
     // 파일 접근 가능 여부 확인
     try {
-      // await fs.access(uploadedFilePath, fs.constants.F_OK);
       const interval = setInterval(() => {
         console.log("check file");
         if (!fs.access(uploadedFilePath, fs.constants.F_OK)) {
@@ -135,6 +137,7 @@ app.post("/image/upload", upload.single("file"), async (req, res) => {
 
 /**
  * cad 파일 업로드시
+ * .dwg 파일을 .png 파일로 변환하여 cads 폴더에 저장
  */
 app.post("/cad/convert", async (req, res) => {
   const files = req.body.Files;
@@ -160,6 +163,7 @@ app.post("/cad/convert", async (req, res) => {
 
 /**
  * canvas 이미지 저장
+ * 도면을 binary 형식으로 받고 도면 내용에 맞게 crop 한 후 .png 파일로 Drawing 폴더에 저장
  */
 app.post("/image/canvas", upload.single("file"), async (req, res) => {
   const { objectNo, planNo, type, width, height, left, top } = req.body;
@@ -188,30 +192,6 @@ app.post("/image/canvas", upload.single("file"), async (req, res) => {
   console.log(`public/uploads/${req.file.filename}`);
   const imagePath = `public/uploads/${req.file.filename}`;
 
-  // fs.writeFile(
-  //   `${FILE_PATH}/${objectNo}_${planNo}_${type}_dummy.png`,
-  //   file,
-  //   "base64"
-  // );
-
-  // fs.existsSync는 동기식 함수이므로 파일 존재 여부를 즉시 확인합니다.
-  // 파일이 존재하지 않으면 sharp() 함수가 에러를 발생시킬 것이므로
-  // 파일 존재 여부를 먼저 확인하는 것이 좋습니다.
-
-  // sharp(imagePath)
-  //   .extract({
-  //     width: parseInt(width),
-  //     height: parseInt(height),
-  //     left: parseInt(left),
-  //     top: parseInt(top),
-  //   })
-  //   .toFile(`${FILE_PATH}/${objectNo}_${planNo}_${type}.png`)
-  //   .then((x) => {
-  //     console.log("x: ", x);
-  //   })
-  //   .catch((err) => {
-  //     console.log("err: ", err);
-  //   });
   try {
     const metadata = await sharp(imagePath).metadata();
     console.log("🚀 ~ app.post ~ metadata:", metadata);
@@ -235,27 +215,6 @@ app.post("/image/canvas", upload.single("file"), async (req, res) => {
     console.log("err: ", err);
   }
 
-  // console.log("File exists, proceeding with image processing");
-
-  // cropImage({
-  //   imagePath,
-  //   x: parseInt(left),
-  //   y: parseInt(top),
-  //   width: parseInt(width),
-  //   height: parseInt(height),
-  //   borderRadius: 0,
-  //   cropCenter: true,
-  // }).then((x) => {
-  //   fs.writeFile(`${FILE_PATH}/${objectNo}_${planNo}_${type}.png`, x);
-  // });
-
-  // sharp(`${FILE_PATH}/${objectNo}_${planNo}_${type}_dummy.png`)
-  //   .extract(config)
-  //   .toFile(`${FILE_PATH}/${objectNo}_${planNo}_${type}.png`, (err, info) => {
-  //     console.log('err: ', err);
-  //     console.log('info: ', info);
-  //   });
-
   fs.rm(imagePath);
 
   res.status(200).send("ok");
@@ -263,11 +222,13 @@ app.post("/image/canvas", upload.single("file"), async (req, res) => {
 
 /**
  * 구글 맵 이미지 저장
+ * 구글 맵 api 호출하여 .png 파일로 maps 폴더에 저장
  */
 app.get("/map/convert", async (req, res) => {
+  const API_KEY = "AIzaSyDO7nVR1N_D2tKy60hgGFavpLaXkHpiHpc";
   const { q, fileNm, zoom } = req.query;
 
-  const targetUrl = `https://maps.googleapis.com/maps/api/staticmap?center=${q}&zoom=${zoom}&maptype=satellite&size=640x640&scale=1&key=AIzaSyDO7nVR1N_D2tKy60hgGFavpLaXkHpiHpc`;
+  const targetUrl = `https://maps.googleapis.com/maps/api/staticmap?center=${q}&zoom=${zoom}&maptype=satellite&size=640x640&scale=1&key=${API_KEY}`;
   const decodeUrl = decodeURIComponent(targetUrl);
 
   const response = await fetch(decodeUrl);
@@ -289,6 +250,9 @@ app.get("/map/convert", async (req, res) => {
   res.status(200).send(result);
 });
 
+/**
+ * 서버 실행
+ */
 app.listen(port, () => {
   console.log(`Server listening on port ${port}`);
 });

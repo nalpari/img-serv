@@ -43,3 +43,8 @@ yarn.lock
 package-lock.json
 pnpm-lock.yaml
 certificates
+
+/cads
+/maps
+/uploads
+/drawings
