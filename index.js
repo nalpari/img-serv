@@ -175,7 +175,7 @@ app.post("/image/canvas", upload.single("file"), async (req, res) => {
   console.log("left: ", left);
   console.log("top: ", top);
 
-  const FILE_PATH = "public/Drawing";
+  const FILE_PATH = `public/Drawing/${objectNo}`;
   try {
     await fs.readdir(FILE_PATH);
   } catch {
@@ -186,11 +186,12 @@ app.post("/image/canvas", upload.single("file"), async (req, res) => {
     __dirname,
     "public",
     "uploads",
+    objectNo,
     req.file.filename
   );
   console.log("🚀 ~ app.post ~ uploadedFilePath:", uploadedFilePath);
-  console.log(`public/uploads/${req.file.filename}`);
-  const imagePath = `public/uploads/${req.file.filename}`;
+  console.log(`public/uploads/${objectNo}/${req.file.filename}`);
+  const imagePath = `public/uploads/${objectNo}/${req.file.filename}`;
 
   try {
     const metadata = await sharp(imagePath).metadata();
