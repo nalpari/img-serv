@@ -48,3 +48,5 @@ certificates
 /maps
 /uploads
 /drawings
+
+/node_modules
